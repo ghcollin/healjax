@@ -1,3 +1,25 @@
+"""
+Copyright (c) 2023 ghcollin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import unittest
 import jax
 jax.config.update('jax_platform_name', 'cpu')
@@ -73,6 +95,59 @@ class TestIndexingMethods(unittest.TestCase):
             test_hp_idxs_nest = jax.jit(jax.vmap(partial(healjax.ang2pix, 'nest', nside)))(test_thetas, test_phis)
             self.assertTrue((true_hp_idxs_nest == test_hp_idxs_nest).all(), (true_hp_idxs_nest, test_hp_idxs_nest))
 
+    def test_indices(self):
+        error_tol = 1000
+        for nside in test_nsides:
+            hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_angs_ring = numpy.array(astropy_healpix.healpy.pix2ang(nside, hp_idxs, nest=False))
+            test_angs_ring = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang, 'ring', nside)))(hp_idxs))
+            self.assertTrue((jnp.abs(true_angs_ring - test_angs_ring) <= error_tol*jnp.finfo(test_angs_ring.dtype).eps * jnp.abs(true_angs_ring)).all(), (nside, true_angs_ring, test_angs_ring, numpy.max(jnp.abs((true_angs_ring - test_angs_ring)))))
+
+        for nside in test_nsides:
+            hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_angs_nest = numpy.array(astropy_healpix.healpy.pix2ang(nside, hp_idxs, nest=True))
+            test_angs_nest = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang, 'nest', nside)))(hp_idxs))
+            self.assertTrue((jnp.abs(true_angs_nest - test_angs_nest) <= error_tol*jnp.finfo(test_angs_nest.dtype).eps * jnp.abs(true_angs_nest)).all(), (nside, true_angs_nest, test_angs_nest, numpy.max(jnp.abs((true_angs_nest - test_angs_nest)))))
+
+    def test_indices_sharp(self):
+        error_tol = 1000
+        for nside in test_nsides:
+            hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_angs_ring = numpy.array(astropy_healpix.healpy.pix2ang(nside, hp_idxs, nest=False))
+            test_angs_ring = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang_colonglat, 'ring', nside)))(hp_idxs))
+            self.assertTrue((jnp.abs(true_angs_ring - test_angs_ring) <= error_tol*jnp.finfo(test_angs_ring.dtype).eps * jnp.abs(true_angs_ring)).all(), (nside, true_angs_ring, test_angs_ring, numpy.max(jnp.abs((true_angs_ring - test_angs_ring)))))
+
+        for nside in test_nsides:
+            hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_angs_nest = numpy.array(astropy_healpix.healpy.pix2ang(nside, hp_idxs, nest=True))
+            test_angs_nest = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang_colonglat, 'nest', nside)))(hp_idxs))
+            self.assertTrue((jnp.abs(true_angs_nest - test_angs_nest) <= error_tol*jnp.finfo(test_angs_nest.dtype).eps * jnp.abs(true_angs_nest)).all(), (nside, true_angs_nest, test_angs_nest, numpy.max(jnp.abs((true_angs_nest - test_angs_nest)))))
+
+    def test_neighbours(self):
+        for nside in test_nsides:
+            hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_neighs_ring = astropy_healpix.neighbours(hp_idxs, nside, order='ring').T
+            test_neighs_ring = numpy.array(jax.jit(jax.vmap(partial(healjax.get_neighbours, 'ring', nside)))(hp_idxs))
+            self.assertTrue((true_neighs_ring  == test_neighs_ring ).all(), (true_neighs_ring , test_neighs_ring, true_neighs_ring - test_neighs_ring ))
+
+        for nside in test_nsides:
+            hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_neighs_nest = astropy_healpix.neighbours(hp_idxs, nside, order='nested').T
+            test_neighs_nest = numpy.array(jax.jit(jax.vmap(partial(healjax.get_neighbours, 'nest', nside)))(hp_idxs))
+            self.assertTrue((true_neighs_nest  == test_neighs_nest ).all(), (true_neighs_nest , test_neighs_nest, true_neighs_nest - test_neighs_nest ))
+
+    def test_convert(self):
+        for nside in test_nsides:
+            test_map = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_convert_to_nest = astropy_healpix.healpy.ring2nest(nside, test_map)
+            test_convert_to_nest = jax.jit(partial(healjax.convert_map, nside, 'ring', 'nest'))(test_map)
+            self.assertTrue((true_convert_to_nest == test_convert_to_nest).all(), (true_convert_to_nest, test_convert_to_nest))
+
+        for nside in test_nsides:
+            test_map = numpy.arange(astropy_healpix.nside_to_npix(nside))
+            true_convert_to_ring = astropy_healpix.healpy.nest2ring(nside, test_map)
+            test_convert_to_ring = jax.jit(partial(healjax.convert_map, nside, 'nest', 'ring'))(test_map)
+            self.assertTrue((true_convert_to_ring == test_convert_to_ring).all(), (true_convert_to_ring, test_convert_to_ring))
 
 if __name__ == '__main__':
     unittest.main()

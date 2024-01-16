@@ -20,4 +20,4 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-from .healjax import *
+from .healjax import vec2pix, ang2pix_radec, ang2pix, pix2vec, pix2ang_radec, pix2ang_colonglat, pix2ang, get_patch, get_neighbours, convert_map
