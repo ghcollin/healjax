@@ -4,6 +4,14 @@ Some healpix routines which run with JAX.
 
 These routines are ports of the BSD licensed healpix library https://github.com/astropy/astropy-healpix
 
+# Installation
+
+```
+pip install git+https://github.com/ghcollin/healjax.git
+```
+
+You will need to have installed JAX yourself.
+
 # Some notes
 
 All functions take a `scheme` argument that can be one of
