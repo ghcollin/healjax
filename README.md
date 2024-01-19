@@ -31,12 +31,18 @@ The following functions are used to convert from healpix bin indices. They all t
 
  - `pix2vec(scheme, nside, hp, dx=None, dy=None)` Takes a healpix index and returns the xyz vector that it corresponds to.
  - `pix2ang_radec(scheme, nside, hp, dx=None, dy=None)` Takes a healpix index and returns the right ascension and declination that it corresponds to.
- - `pix2ang_colonglat(scheme, nside, hp, dx=None, dy=None)` Takes a healpix index and returns theta and phi in the healpy convention.
+ - `pix2ang_colatlong(scheme, nside, hp, dx=None, dy=None)` Takes a healpix index and returns theta and phi in the healpy colatitude longitude convention.
  - `pix2ang(scheme, nside, hp, dx=None, dy=None)` Same as `pix2ang_colonglat` but the conversion is done through xyz vectors as in the astropy healpix library.
 
 There are in addition two functions for finding neighbouring healpix bins.
  - `get_neighbours(scheme, nside, hp)` This is intended to have the same API as the healpy neighbour function (as tested against the astropy healpix library). It returns 8 neighbours, with -1 denoting a non-existent neighbour.
  - `get_patch(scheme, nside, hp)` This is used to implement `get_neighbours` and returns a 3x3 array of the neighbours and the input index (located in the central element). A -1 denotes that the neighbour in that position does not exist.
+
+The following functions can be used to convert between coordinate systems:
+ - `ang2vec_radec(ra, dec)` converts from right ascension and declination to the x, y, z vector system.
+ - `ang2vec(theta, phi)` converts from the healpy colatitude and longitude system to the x, y, z vector system.
+ - `vec2ang_radec(x, y, z)` converts from the x, y, z vector system to right ascension and declination.
+ - `vec2ang(x, y, z)` converts from the x, y, z vector system to the healpy colatitude longitude system, returning theta, phi.
 
 Finally, the `convert_map(nside, in_scheme, out_scheme, map)` function can be used to convert a map to and from the various schemes detailed above.
 

@@ -593,16 +593,31 @@ def capture_m1s(f):
 # API funcs
 ##############
 
+def ang2vec_radec(ra, dec):
+    return radec2xyz(ra, dec)
+
+def ang2vec(theta, phi):
+    ra = phi
+    dec = jnp.pi/2 - theta
+    return ang2vec_radec(ra, dec)
+
 def vec2pix(scheme, nside, x, y, z, out_dtype=None):
     return to_scheme_funcs[scheme](nside, *xyz_to_hp(nside, x, y, z, out_dtype=out_dtype))
 
 def ang2pix_radec(scheme, nside, ra, dec, out_dtype=None):
-    return vec2pix(scheme, nside, *radec2xyz(ra, dec), out_dtype=out_dtype)
+    return vec2pix(scheme, nside, *ang2vec_radec(ra, dec), out_dtype=out_dtype)
 
 def ang2pix(scheme, nside, theta, phi, out_dtype=None):
-    ra = phi
-    dec = jnp.pi/2 - theta
-    return ang2pix_radec(scheme, nside, ra, dec, out_dtype=out_dtype)
+    return vec2pix(scheme, nside, *ang2vec(theta, phi), out_dtype=out_dtype)
+
+def vec2ang_radec(x, y, z):
+    return xyz2radec(x, y, z)
+    
+def vec2ang(x, y, z):
+    ra, dec = vec2ang_radec(x, y, z)
+    phi = ra
+    theta = jnp.pi/2 - dec
+    return theta,  phi
 
 def pix2vec(scheme, nside, hp, dx=None, dy=None):
     dx = 0.5 if dx is None else dx
@@ -614,7 +629,7 @@ def pix2ang_radec(scheme, nside, hp, dx=None, dy=None):
     dy = 0.5 if dy is None else dy
     return zphi2radec(*hp_to_zphi(nside, *from_scheme_funcs[scheme](nside, hp), dx, dy))
 
-def pix2ang_colonglat(scheme, nside, hp, dx=None, dy=None):
+def pix2ang_colatlong(scheme, nside, hp, dx=None, dy=None):
     dx = 0.5 if dx is None else dx
     dy = 0.5 if dy is None else dy
     ra, dec = zphi2radec(*hp_to_zphi(nside, *from_scheme_funcs[scheme](nside, hp), dx, dy))
@@ -625,10 +640,7 @@ def pix2ang_colonglat(scheme, nside, hp, dx=None, dy=None):
 def pix2ang(scheme, nside, hp, dx=None, dy=None):
     dx = 0.5 if dx is None else dx
     dy = 0.5 if dy is None else dy
-    ra, dec = xyz2radec(*zphi2xyz(*hp_to_zphi(nside, *from_scheme_funcs[scheme](nside, hp), dx, dy)))
-    phi = ra
-    theta = jnp.pi/2 - dec
-    return theta, phi
+    return vec2ang(*zphi2xyz(*hp_to_zphi(nside, *from_scheme_funcs[scheme](nside, hp), dx, dy)))
 
 def get_patch(scheme, nside, hp):
     return jax.vmap(jax.vmap(capture_m1s(partial(to_scheme_funcs[scheme]), nside)))(*healpix_get_patch_xy(nside, *from_scheme_funcs[scheme](nside, hp)))

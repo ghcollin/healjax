@@ -114,13 +114,13 @@ class TestIndexingMethods(unittest.TestCase):
         for nside in test_nsides:
             hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
             true_angs_ring = numpy.array(astropy_healpix.healpy.pix2ang(nside, hp_idxs, nest=False))
-            test_angs_ring = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang_colonglat, 'ring', nside)))(hp_idxs))
+            test_angs_ring = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang_colatlong, 'ring', nside)))(hp_idxs))
             self.assertTrue((jnp.abs(true_angs_ring - test_angs_ring) <= error_tol*jnp.finfo(test_angs_ring.dtype).eps * jnp.abs(true_angs_ring)).all(), (nside, true_angs_ring, test_angs_ring, numpy.max(jnp.abs((true_angs_ring - test_angs_ring)))))
 
         for nside in test_nsides:
             hp_idxs = numpy.arange(astropy_healpix.nside_to_npix(nside))
             true_angs_nest = numpy.array(astropy_healpix.healpy.pix2ang(nside, hp_idxs, nest=True))
-            test_angs_nest = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang_colonglat, 'nest', nside)))(hp_idxs))
+            test_angs_nest = numpy.array(jax.jit(jax.vmap(partial(healjax.pix2ang_colatlong, 'nest', nside)))(hp_idxs))
             self.assertTrue((jnp.abs(true_angs_nest - test_angs_nest) <= error_tol*jnp.finfo(test_angs_nest.dtype).eps * jnp.abs(true_angs_nest)).all(), (nside, true_angs_nest, test_angs_nest, numpy.max(jnp.abs((true_angs_nest - test_angs_nest)))))
 
     def test_neighbours(self):
