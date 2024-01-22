@@ -44,6 +44,10 @@ The following functions can be used to convert between coordinate systems:
  - `vec2ang_radec(x, y, z)` converts from the x, y, z vector system to right ascension and declination.
  - `vec2ang(x, y, z)` converts from the x, y, z vector system to the healpy colatitude longitude system, returning theta, phi.
 
+This library follows astropy healpix in using an internal pixel addressing system that has three components: a 'big' healpix index that determines which of the twelve healpix faces the pixel in located in, as well as an x and y coordinate that addresses the pixel within this face using a cartesian coordinate chart. This should not be confused with the 'xy' healpix indexing scheme that packs these three numbers into a single healpix index. Nevertheless, knowing the x, y coordinates of a pixel can be useful, and so these functions are defined to retrieve them.
+ - `scheme2bighpxy(scheme, nside, hp_idx)` converts from the given scheme (including 'xy') to the internal big healpix, x, y system.
+ - `bighpxy2scheme(scheme, nside, bighp, x, y)` converts from the given big healpix face number, x and y to the provided scheme (including 'xy').
+
 Finally, the `convert_map(nside, in_scheme, out_scheme, map)` function can be used to convert a map to and from the various schemes detailed above.
 
 # Compatibility

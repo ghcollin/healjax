@@ -593,6 +593,12 @@ def capture_m1s(f):
 # API funcs
 ##############
 
+def bighpxy2scheme(scheme, nside, bighp, x, y):
+    return to_scheme_funcs[scheme](nside, bighp, x, y)
+
+def scheme2bighpxy(scheme, nside, hp_idx):
+    return from_scheme_funcs[scheme](nside, hp_idx)
+
 def ang2vec_radec(ra, dec):
     return radec2xyz(ra, dec)
 
