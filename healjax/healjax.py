@@ -655,5 +655,5 @@ def get_neighbours(scheme, nside, hp):
     return jax.vmap(capture_m1s(partial(to_scheme_funcs[scheme], nside)))(*healpixl_get_neighbours_xy(nside, *from_scheme_funcs[scheme](nside, hp)))
 
 def convert_map(nside, in_scheme, out_scheme, map):
-    permutation = jax.vmap(lambda hp: to_scheme_funcs[out_scheme](nside, *from_scheme_funcs[in_scheme](nside, hp)))(jnp.arange(12*nside*nside))
+    permutation = jax.vmap(lambda hp: to_scheme_funcs[in_scheme](nside, *from_scheme_funcs[out_scheme](nside, hp)))(jnp.arange(12*nside*nside))
     return map[permutation]

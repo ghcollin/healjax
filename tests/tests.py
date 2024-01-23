@@ -28,6 +28,7 @@ import jax.numpy as jnp
 import healjax
 import astropy_healpix
 import astropy_healpix.healpy
+import healpy
 import numpy
 from functools import partial
 
@@ -139,15 +140,67 @@ class TestIndexingMethods(unittest.TestCase):
     def test_convert(self):
         for nside in test_nsides:
             test_map = numpy.arange(astropy_healpix.nside_to_npix(nside))
-            true_convert_to_nest = astropy_healpix.healpy.ring2nest(nside, test_map)
+            true_convert_to_nest = healpy.reorder(test_map, r2n=True)
             test_convert_to_nest = jax.jit(partial(healjax.convert_map, nside, 'ring', 'nest'))(test_map)
             self.assertTrue((true_convert_to_nest == test_convert_to_nest).all(), (true_convert_to_nest, test_convert_to_nest))
 
         for nside in test_nsides:
             test_map = numpy.arange(astropy_healpix.nside_to_npix(nside))
-            true_convert_to_ring = astropy_healpix.healpy.nest2ring(nside, test_map)
+            true_convert_to_ring = healpy.reorder(test_map, n2r=True)
             test_convert_to_ring = jax.jit(partial(healjax.convert_map, nside, 'nest', 'ring'))(test_map)
             self.assertTrue((true_convert_to_ring == test_convert_to_ring).all(), (true_convert_to_ring, test_convert_to_ring))
+
+    def test_convert_identity(self):
+        for scheme in ['ring', 'nest', 'xy']:
+            for nside in test_nsides:
+                test_map = numpy.arange(astropy_healpix.nside_to_npix(nside))
+                id_map = jax.jit(partial(healjax.convert_map, nside, scheme, scheme))(test_map)
+                self.assertTrue((test_map == id_map).all(), (scheme, test_map, id_map))
+
+    def test_convert_from_xy(self):
+        error_tol = 1e7
+        for nside in test_nsides:
+            truth_ras, truth_decs = astropy_healpix.healpy.pix2ang(nside, numpy.arange(astropy_healpix.nside_to_npix(nside)), lonlat=True, nest=True)
+            truth_map = (truth_ras + 2*numpy.pi*truth_decs)*(numpy.pi/180)
+
+            test_ras, test_decs = jax.jit(jax.vmap(partial(healjax.pix2ang_radec, 'xy', nside)))(numpy.arange(astropy_healpix.nside_to_npix(nside)))
+            test_map_xy = test_ras + 2*jnp.pi*test_decs
+            test_map = jax.jit(partial(healjax.convert_map, nside, 'xy', 'nest'))(test_map_xy)
+
+            self.assertTrue((numpy.abs(truth_map - test_map) <= error_tol * numpy.finfo(truth_map.dtype).eps * numpy.abs(truth_map)).all(), (truth_map, test_map, test_map_xy, numpy.max(numpy.abs(truth_map - test_map)/(numpy.finfo(truth_map.dtype).eps * numpy.abs(truth_map)))))
+
+        for nside in test_nsides:
+            truth_ras, truth_decs = astropy_healpix.healpy.pix2ang(nside, numpy.arange(astropy_healpix.nside_to_npix(nside)), lonlat=True)
+            truth_map = (truth_ras + 2*numpy.pi*truth_decs)*(numpy.pi/180)
+
+            test_ras, test_decs = jax.jit(jax.vmap(partial(healjax.pix2ang_radec, 'xy', nside)))(numpy.arange(astropy_healpix.nside_to_npix(nside)))
+            test_map_xy = test_ras + 2*jnp.pi*test_decs
+            test_map = jax.jit(partial(healjax.convert_map, nside, 'xy', 'ring'))(test_map_xy)
+
+            self.assertTrue((numpy.abs(truth_map - test_map) <= error_tol * numpy.finfo(truth_map.dtype).eps * numpy.abs(truth_map)).all(), (truth_map, test_map, test_map_xy, numpy.max(numpy.abs(truth_map - test_map)/(numpy.finfo(truth_map.dtype).eps * numpy.abs(truth_map)))))
+
+    def test_convert_to_xy(self):
+        error_tol = 1e7
+        for nside in test_nsides:
+            truth_ras, truth_decs = astropy_healpix.healpy.pix2ang(nside, numpy.arange(astropy_healpix.nside_to_npix(nside)), lonlat=True, nest=True)
+            truth_map = (truth_ras + 2*numpy.pi*truth_decs)*(numpy.pi/180)
+            truth_map_xy = jax.jit(partial(healjax.convert_map, nside, 'nest', 'xy'))(truth_map)
+
+            test_ras, test_decs = jax.jit(jax.vmap(partial(healjax.pix2ang_radec, 'xy', nside)))(numpy.arange(astropy_healpix.nside_to_npix(nside)))
+            test_map_xy = test_ras + 2*jnp.pi*test_decs
+
+            self.assertTrue((numpy.abs(truth_map_xy - test_map_xy) <= error_tol * numpy.finfo(truth_map.dtype).eps * numpy.abs(truth_map_xy)).all(), (truth_map_xy, test_map_xy, truth_map))
+
+        for nside in test_nsides:
+            truth_ras, truth_decs = astropy_healpix.healpy.pix2ang(nside, numpy.arange(astropy_healpix.nside_to_npix(nside)), lonlat=True)
+            truth_map = (truth_ras + 2*numpy.pi*truth_decs)*(numpy.pi/180)
+            truth_map_xy = jax.jit(partial(healjax.convert_map, nside, 'ring', 'xy'))(truth_map)
+
+            test_ras, test_decs = jax.jit(jax.vmap(partial(healjax.pix2ang_radec, 'xy', nside)))(numpy.arange(astropy_healpix.nside_to_npix(nside)))
+            test_map_xy = test_ras + 2*jnp.pi*test_decs
+
+            self.assertTrue((numpy.abs(truth_map_xy - test_map_xy) <= error_tol * numpy.finfo(truth_map.dtype).eps * numpy.abs(truth_map_xy)).all(), (truth_map_xy, test_map_xy, truth_map))
+
 
 if __name__ == '__main__':
     unittest.main()

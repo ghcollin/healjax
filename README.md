@@ -54,7 +54,7 @@ Finally, the `convert_map(nside, in_scheme, out_scheme, map)` function can be us
 
 Angle-pair to healpix functions tested to agree with astropy-healpix up to 1e-15 away from boundary in 64bit mode. Tests in 32bit mode predictably fail, as astropy-healpix computes in 64bit mode, meaning that we can't expect the binning results to be reproduced by 32bit calculations. 
 
-Healpix to angle-pair functions current exhibit a relative error that grows with the nside. For nsides up to 1024, this stays within a factor of 1000 times the floating point epsilon. This may be due to an implementation error that I haven't been able to track down.
+Healpix to angle-pair functions current exhibit a relative error that grows with the nside. For nsides up to 1024, this stays within a factor of 1e3 times to 1e7 times the floating point epsilon (this is still a relative error of less than 1e-9). This may be due to an implementation error that I haven't been able to track down.
 
 The neighbours and convert map functions have been tested to agree with astropy-healpix.
 

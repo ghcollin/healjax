@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='healjax',
-    version='0.1.3',
+    version='0.1.4',
     url='https://github.com/ghcollin/healjax',
     description='Healpix routines for JAX.',
     long_description=open("README.md").read(),
