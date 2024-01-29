@@ -23,37 +23,37 @@ All functions also take an `nside` argument that should be an integer. In typica
 
 The following functions are used to convert to healpix bin indices. They all take an `out_dtype` option that defaults to `int`. This option can be used if you wish to perform calculations in a smaller dtype than the default JAX integer type.
 
- - `vec2pix(scheme, nside, x, y, z, out_dtype=None)` Takes an xyz vector and returns the healpix bin that it lies in.
- - `ang2pix_radec(scheme, nside, ra, dec, out_dtype=None)` Takes a right ascension and declination and returns a healpix bin.
- - `ang2pix(scheme, nside, theta, phi, out_dtype=None)` Takes a theta and phi pair of angles in the healpy convention and returns a healpix bin.
+ - `vec2pix(scheme, nside, x, y, z, out_dtype=None) -> hp` Takes an xyz vector and returns the healpix bin that it lies in.
+ - `ang2pix_radec(scheme, nside, ra, dec, out_dtype=None) -> hp` Takes a right ascension and declination and returns a healpix bin.
+ - `ang2pix(scheme, nside, theta, phi, out_dtype=None) -> hp` Takes a theta and phi pair of angles in the healpy convention and returns a healpix bin.
 
 The following functions are used to convert from healpix bin indices. They all take a `dx` and `dy` option that is used to offset the output within the requested bin. The default for both is 0.5, which returns a vector/angle-pair that lies in the center of the bin.
 
- - `pix2vec(scheme, nside, hp, dx=None, dy=None)` Takes a healpix index and returns the xyz vector that it corresponds to.
- - `pix2ang_radec(scheme, nside, hp, dx=None, dy=None)` Takes a healpix index and returns the right ascension and declination that it corresponds to.
- - `pix2ang_colatlong(scheme, nside, hp, dx=None, dy=None)` Takes a healpix index and returns theta and phi in the healpy colatitude longitude convention.
- - `pix2ang(scheme, nside, hp, dx=None, dy=None)` Same as `pix2ang_colonglat` but the conversion is done through xyz vectors as in the astropy healpix library.
+ - `pix2vec(scheme, nside, hp, dx=None, dy=None) -> (x, y, z)` Takes a healpix index and returns the xyz vector that it corresponds to.
+ - `pix2ang_radec(scheme, nside, hp, dx=None, dy=None) -> (ra, dec)` Takes a healpix index and returns the right ascension and declination that it corresponds to.
+ - `pix2ang_colatlong(scheme, nside, hp, dx=None, dy=None) -> (theta, phi)` Takes a healpix index and returns theta and phi in the healpy colatitude longitude convention.
+ - `pix2ang(scheme, nside, hp, dx=None, dy=None) -> (theta, phi)` Same as `pix2ang_colonglat` but the conversion is done through xyz vectors as in the astropy healpix library.
 
 There are in addition two functions for finding neighbouring healpix bins.
- - `get_neighbours(scheme, nside, hp)` This is intended to have the same API as the healpy neighbour function (as tested against the astropy healpix library). It returns 8 neighbours, with -1 denoting a non-existent neighbour.
- - `get_patch(scheme, nside, hp)` This is used to implement `get_neighbours` and returns a 3x3 array of the neighbours and the input index (located in the central element). A -1 denotes that the neighbour in that position does not exist.
+ - `get_neighbours(scheme, nside, hp) -> hp[8]` This is intended to have the same API as the healpy neighbour function (as tested against the astropy healpix library). It returns 8 neighbours, with -1 denoting a non-existent neighbour.
+ - `get_patch(scheme, nside, hp) -> hp[3, 3]` This is used to implement `get_neighbours` and returns a 3x3 array of the neighbours and the input index (located in the central element). A -1 denotes that the neighbour in that position does not exist.
 
 The following functions can be used to convert between coordinate systems:
- - `ang2vec_radec(ra, dec)` converts from right ascension and declination to the x, y, z vector system.
- - `ang2vec(theta, phi)` converts from the healpy colatitude and longitude system to the x, y, z vector system.
- - `vec2ang_radec(x, y, z)` converts from the x, y, z vector system to right ascension and declination.
- - `vec2ang(x, y, z)` converts from the x, y, z vector system to the healpy colatitude longitude system, returning theta, phi.
+ - `ang2vec_radec(ra, dec) -> (x, y, z)` converts from right ascension and declination to the x, y, z vector system.
+ - `ang2vec(theta, phi) -> (x, y, z)` converts from the healpy colatitude and longitude system to the x, y, z vector system.
+ - `vec2ang_radec(x, y, z) -> (ra, dec)` converts from the x, y, z vector system to right ascension and declination.
+ - `vec2ang(x, y, z) -> (theta, phi)` converts from the x, y, z vector system to the healpy colatitude longitude system, returning theta, phi.
 
 This library follows astropy healpix in using an internal pixel addressing system that has three components: a 'big' healpix index that determines which of the twelve healpix faces the pixel in located in, as well as an x and y coordinate that addresses the pixel within this face using a cartesian coordinate chart. This should not be confused with the 'xy' healpix indexing scheme that packs these three numbers into a single healpix index. Nevertheless, knowing the x, y coordinates of a pixel can be useful, and so these functions are defined to retrieve them.
- - `scheme2bighpxy(scheme, nside, hp_idx)` converts from the given scheme (including 'xy') to the internal big healpix, x, y system.
- - `bighpxy2scheme(scheme, nside, bighp, x, y)` converts from the given big healpix face number, x and y to the provided scheme (including 'xy').
+ - `scheme2bighpxy(scheme, nside, hp_idx) -> (bighp, x, y)` converts from the given scheme (including 'xy') to the internal big healpix, x, y system.
+ - `bighpxy2scheme(scheme, nside, bighp, x, y) -> hp` converts from the given big healpix face number, x and y to the provided scheme (including 'xy').
 
 There is also the usual nside and npix utility functions. Note that these are all numpy functions, they cannot be used for runtime JAX and are intended for non-traced computations such as array dimensions.
- - `nside2npix(nside)`
- - `npix2nside(npix)`
- - `get_nside(map)` returns the nside for a provided healpix array.
+ - `nside2npix(nside) -> npix`
+ - `npix2nside(npix) -> nside`
+ - `get_nside(map) -> nside` returns the nside for a provided healpix array.
 
-Finally, the `convert_map(in_scheme, out_scheme, map)` function can be used to convert a map to and from the various schemes detailed above.
+Finally, the `convert_map(in_scheme, out_scheme, map) -> converted_map` function can be used to convert a map to and from the various schemes detailed above.
 
 # Compatibility
 
