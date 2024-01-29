@@ -654,6 +654,17 @@ def get_patch(scheme, nside, hp):
 def get_neighbours(scheme, nside, hp):
     return jax.vmap(capture_m1s(partial(to_scheme_funcs[scheme], nside)))(*healpixl_get_neighbours_xy(nside, *from_scheme_funcs[scheme](nside, hp)))
 
-def convert_map(nside, in_scheme, out_scheme, map):
+def npix2nside(npix):
+    npix = numpy.asarray(npix)
+    return numpy.round(numpy.sqrt(npix / 12)).astype(npix.dtype)
+
+def nside2npix(nside):
+    return 12*nside*nside
+
+def get_nside(map):
+    return npix2nside(len(map))
+
+def convert_map(in_scheme, out_scheme, map):
+    nside = get_nside(map)
     permutation = jax.vmap(lambda hp: to_scheme_funcs[in_scheme](nside, *from_scheme_funcs[out_scheme](nside, hp)))(jnp.arange(12*nside*nside))
     return map[permutation]

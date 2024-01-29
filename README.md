@@ -48,7 +48,12 @@ This library follows astropy healpix in using an internal pixel addressing syste
  - `scheme2bighpxy(scheme, nside, hp_idx)` converts from the given scheme (including 'xy') to the internal big healpix, x, y system.
  - `bighpxy2scheme(scheme, nside, bighp, x, y)` converts from the given big healpix face number, x and y to the provided scheme (including 'xy').
 
-Finally, the `convert_map(nside, in_scheme, out_scheme, map)` function can be used to convert a map to and from the various schemes detailed above.
+There is also the usual nside and npix utility functions. Note that these are all numpy functions, they cannot be used for runtime JAX and are intended for non-traced computations such as array dimensions.
+ - `nside2npix(nside)`
+ - `npix2nside(npix)`
+ - `get_nside(map)` returns the nside for a provided healpix array.
+
+Finally, the `convert_map(in_scheme, out_scheme, map)` function can be used to convert a map to and from the various schemes detailed above.
 
 # Compatibility
 
