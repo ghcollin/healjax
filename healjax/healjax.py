@@ -165,7 +165,8 @@ def hp_to_zphi_equator(nside, bighp, x, y):
     z = 2.0/3.0 * (x + y + zoff)
     phi = jnp.pi/4 * (x - y + phioff + 2 * bighp)
     phi = jnp.mod(phi, 2*jnp.pi)
-    return z, phi, jnp.sqrt(1 - jnp.square(z))
+    rad = jnp.sqrt(jnp.maximum(0.0, 1 - jnp.square(z))) # This sqrt can cause spirious NaN errors in debug mode, so we clip the input
+    return z, phi, rad
 
 def hp_to_zphi(nside, bighp, xp, yp, dx, dy):
 
