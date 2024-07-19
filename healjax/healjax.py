@@ -650,7 +650,7 @@ def pix2ang(scheme, nside, hp, dx=None, dy=None):
     return vec2ang(*zphi2xyz(*hp_to_zphi(nside, *from_scheme_funcs[scheme](nside, hp), dx, dy)))
 
 def get_patch(scheme, nside, hp):
-    return jax.vmap(jax.vmap(capture_m1s(partial(to_scheme_funcs[scheme]), nside)))(*healpix_get_patch_xy(nside, *from_scheme_funcs[scheme](nside, hp)))
+    return jax.vmap(jax.vmap(capture_m1s(partial(to_scheme_funcs[scheme], nside))))(*healpix_get_patch_xy(nside, *from_scheme_funcs[scheme](nside, hp)))
 
 def get_neighbours(scheme, nside, hp):
     return jax.vmap(capture_m1s(partial(to_scheme_funcs[scheme], nside)))(*healpixl_get_neighbours_xy(nside, *from_scheme_funcs[scheme](nside, hp)))
